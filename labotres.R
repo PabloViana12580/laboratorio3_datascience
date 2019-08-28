@@ -56,7 +56,6 @@ auto.arima(impdiesel)
 
 fit <- arima(log(imp_diesel), c(0, 3, 2),seasonal = list(order = c(0, 1, 1), period = 12))
 pred <- predict(fit, n.ahead = 10*12)
-
 # ANALISIS EXPLORATORIO #
 datos<-read.csv("datosImp.csv")
 View(datos)
@@ -155,7 +154,5 @@ qqplot(datos$Anio, datos$Total)
 hist(totalSuper, breaks = 10, main = "Histograma de Gasolina Super")
 hist(totalRegular, breaks = 10, main = "Histograma de Gasolina Regular")
 hist(totalTotal, breaks = 10, main = "Histograma del Total de Importaciones")
-
-
 
 
