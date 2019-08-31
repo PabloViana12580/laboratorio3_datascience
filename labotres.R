@@ -4,68 +4,33 @@
 # Segio Marchena - 16387
 # Laboratorio numero 3
 
+#Paquetes a utilizar 
 install.packages("forecast")
 install.packages("fUnitRoots")
 install.packages("ggfortify")
+install.packages("xts")
 
 library(forecast)
 library(tseries)
 library(fUnitRoots)
 library(ggfortify)
+library(xts)
+library(dplyr)
 
-
-# Datos de importacion de gasolina
-importacion.gasolina <- read.csv("datosImp.csv")
-
-importacion.gasolina[importacion.gasolina$Anio>=2018,"Diesel"] <- importacion.gasolina[importacion.gasolina$Anio>=2018,"DieselLS"]
-importacion.gasolina$DieselLS <- NULL
-
-imp_diesel <- importacion.gasolina[1:2]
-imp_diesel<- importacion.gasolina$Diesel
-
-#serie univariante de diesel
-impdiesel <- as.ts(imp_diesel, start = c(2001, 1), end = c(2019, 6), frequency = 12)
-start(impdiesel)
-end(impdiesel)
-plot(impdiesel)
-
-plot(aggregate(impdiesel,FUN=mean))
-dec.import<-decompose(imp_diesel)
-plot(imp_diesel)
-plot(dec.import$seasonal)
-
-#Aplicaremos una transformación logarítmica
-logdiesel <- log(imp_diesel)
-plot(decompose(logdiesel))
-
-#Ver el gráfico de la serie
-plot(logAirPassengers)
-
-#Para saber si hay raíces unitarias
-adfTest(logdiesel)
-adfTest(diff(logdiesel))
-#Gráfico de autocorrelación
-acf(logdiesel)
-# funciones de autocorrelación y autocorrelación parcial
-acf(diff(logdiesel),12)
-pacf(diff(logdiesel))
-
-# Hacer el modelo
-
-auto.arima(impdiesel)
-
-fit <- arima(log(imp_diesel), c(0, 3, 2),seasonal = list(order = c(0, 1, 1), period = 12))
-pred <- predict(fit, n.ahead = 10*12)
-# ANALISIS EXPLORATORIO #
+# ANALISIS EXPLORATORIO 
 datos<-read.csv("datosImp.csv")
-View(datos)
 
 #meses
 meses<-c("Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago","Sep", "Oct", "Nov", "Dic")
 #meses2
 meses2<-c("Ene", "Feb", "Mar", "Abr", "May", "Jun")
 
+#Unificación de Gasolina DieselLS y Diesel normal
+datos[datos$Anio>=2018,"Diesel"] <- datos[datos$Anio>=2018,"DieselLS"]
+datos$DieselLS<-NULL
+datos$DieselULS<-NULL
 
+#División de datos por año
 anio2001<-datos[datos$Anio == 2001,]
 anio2002<-datos[datos$Anio == 2002,]
 anio2003<-datos[datos$Anio == 2003,]
@@ -122,12 +87,12 @@ totalRegular<-c(mean(anio2001$GasRegular), mean(anio2002$GasRegular),mean(anio20
               mean(anio2014$GasRegular), mean(anio2015$GasRegular),mean(anio2016$GasRegular), 
               mean(anio2017$GasRegular), mean(anio2018$GasRegular),mean(anio2019$GasRegular))
 
-totalDiesel<-c(mean(anio2001$GasSuperior), mean(anio2002$GasSuperior),mean(anio2003$GasSuperior),
-              mean(anio2004$GasSuperior), mean(anio2005$GasSuperior),mean(anio2006$GasSuperior),
-              mean(anio2007$GasSuperior), mean(anio2008$GasSuperior),mean(anio2009$GasSuperior), mean(anio2010$GasSuperior),
-              mean(anio2011$GasSuperior), mean(anio2012$GasSuperior),mean(anio2013$GasSuperior),
-              mean(anio2014$GasSuperior), mean(anio2015$GasSuperior),mean(anio2016$GasSuperior), 
-              mean(anio2017$GasSuperior), mean(anio2018$GasSuperior),mean(anio2019$GasSuperior))
+totalDiesel<-c(mean(anio2001$Diesel), mean(anio2002$Diesel),mean(anio2003$Diesel),
+              mean(anio2004$Diesel), mean(anio2005$Diesel),mean(anio2006$Diesel),
+              mean(anio2007$Diesel), mean(anio2008$Diesel),mean(anio2009$Diesel), mean(anio2010$Diesel),
+              mean(anio2011$Diesel), mean(anio2012$Diesel),mean(anio2013$Diesel),
+              mean(anio2014$Diesel), mean(anio2015$Diesel),mean(anio2016$Diesel), 
+              mean(anio2017$Diesel), mean(anio2018$Diesel),mean(anio2019$Diesel))
 
 totalTotal<-c(mean(anio2001$Total),  mean(anio2002$Total),mean(anio2003$Total),
                mean(anio2004$Total), mean(anio2005$Total),mean(anio2006$Total),
@@ -137,12 +102,10 @@ totalTotal<-c(mean(anio2001$Total),  mean(anio2002$Total),mean(anio2003$Total),
                mean(anio2016$Total), mean(anio2017$Total),mean(anio2018$Total),
                mean(anio2019$Total))
 
-
 #Anos
 anios<-c(2001, 2002,2003,2004,2005,2006,2007,2008,2009,2010,2011,2012,2013,2014,2015,2016,2017,2018,2019)
 barplot(totalSuper, names.arg = anios, main = "Importacion Promedio de GasSuperior")
 barplot(totalRegular, names.arg = anios, main = "Importacion Promedio de GasRegular")
-#FALTA JUNTAR DIESEL LS CON DIESEL
 barplot(totalDiesel, names.arg = anios, main = "Importacion Promedio de GasRegular")
 barplot(totalTotal, names.arg = anios, main = "Importacion Promedio Total")
 
@@ -155,4 +118,51 @@ hist(totalSuper, breaks = 10, main = "Histograma de Gasolina Super")
 hist(totalRegular, breaks = 10, main = "Histograma de Gasolina Regular")
 hist(totalTotal, breaks = 10, main = "Histograma del Total de Importaciones")
 
+# ------------------------ PREGUNTA 2 -----------------------------
 
+#Serie univariante de Diesel
+
+#Hacemos una tabla unicamente con los valores de año, mes y diesel importado
+importacion.diesel <- datos[,c(1,2,9)]
+
+#Pegamos en una misma columna el año, el mes y agregamos un 1. Esto para obtener un formato de fecha estándar Y-M-D
+importacion.diesel$Anio <- paste(importacion.diesel$Anio, importacion.diesel$Mes, 1, sep="-")
+importacion.diesel$Mes <- NULL
+
+#Cambiamos la clase de la variable año a Date
+importacion.diesel <- mutate(importacion.diesel, Anio = as.Date(Anio, format= "%Y-%m-%d"))
+
+serietiempo.diesel <- xts(importacion.diesel$Diesel, order.by = importacion.diesel$Anio)
+
+start(serietiempo.diesel)
+end(serietiempo.diesel)
+plot(serietiempo.diesel)
+
+
+# plot(aggregate(impdiesel,FUN=mean))
+# dec.import<-decompose(imp_diesel)
+# plot(imp_diesel)
+# plot(dec.import$seasonal)
+# 
+# #Aplicaremos una transformación logarítmica
+# logdiesel <- log(imp_diesel)
+# plot(decompose(logdiesel))
+# 
+# #Ver el gráfico de la serie
+# plot(logAirPassengers)
+# 
+# #Para saber si hay raíces unitarias
+# adfTest(logdiesel)
+# adfTest(diff(logdiesel))
+# #Gráfico de autocorrelación
+# acf(logdiesel)
+# # funciones de autocorrelación y autocorrelación parcial
+# acf(diff(logdiesel),12)
+# pacf(diff(logdiesel))
+# 
+# # Hacer el modelo
+# 
+# auto.arima(impdiesel)
+# 
+# fit <- arima(log(imp_diesel), c(0, 3, 2),seasonal = list(order = c(0, 1, 1), period = 12))
+# pred <- predict(fit, n.ahead = 10*12)
