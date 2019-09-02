@@ -225,11 +225,26 @@ plot(decompose_regular$seasonal)
 plot(decompose_regular$trend)
 logregular <- log(serietiempo.regular)
 plot(logregular, type="l", main="Serie de tiempo de importación regular con transformación logarítmica", sub="El volumen  está  dado  en  barriles  de  42  galones", xlab="años", ylab="Volumen importado")
-abline(reg=lm(logregular~time(logregular)), col=c("red"))
+abline(reg=lm(decompose_regular$trend~time(logregular)), col=c("red"))
 
 #Gráfico de autocorrelación
-acf(logdiesel, type="correlation", lag.max = 100, main = "Gráfico de correlación serie de tiempo importacion Diesel" )
+acf(logregular, type="correlation", lag.max = 100, main = "Gráfico de correlación serie de tiempo importacion Regular" )
 
 #Utilización de prueba Dickey-Fuller para raíces unitarias
-adfTest(logdiesel)
-adfTest(diff(logdiesel))
+adfTest(logregular)
+adfTest(diff(logregular))
+
+# funciones de autocorrelación y autocorrelación parcial
+acf(diff(logregular),12) #3 valores que pasan la linea punteada
+pacf(diff(logregular)) #5 valores pasan la linea punteada
+#Funcion autoarima para encontrar valores propuestos de p, d y q
+auto.arima(serietiempo.regular) #1, 1, 2
+
+
+fit_regular <- arima(logregular, c(5, 1, 3),seasonal = list(order = c(0, 1, 1), period = 12))
+#Utilizando valores p, d y q obtenidos en autoarima
+fit_regular.2 <- arima(logregular, c(1, 1, 2),seasonal = list(order = c(0, 1, 1), period = 12))
+
+#Predicciones
+forecastreg <- forecast(fit_regular, level = c(95), h = 120)
+forecastreg.2 <- forecast(fit_regular.2, level = c(95), h = 120)
