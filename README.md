@@ -1,2 +1,2 @@
 # laboratorio3_datascience
-Laboratorio numero 3 de la clase Data Science para predecir series de tiempo en predicción de importaciones de gasolina
+Laboratorio numero 3, Data Science para predecciones sobre series de tiempo de importaciones de gasolina
