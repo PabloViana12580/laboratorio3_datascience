@@ -189,7 +189,7 @@ pred.2 <- predict(fit.3, n.ahead = 10*12)
 
 ts.plot(serietiempo.diesel,2.718^pred$pred, log = "y", lty = c(1,3))
 
-#Serie univariante regular
+#-------------Serie univariante regular-------------
 
 #Hacemos una tabla unicamente con los valores de año, mes y diesel importado
 importacion.regular <- datos[,c(1,2,6)]
@@ -202,49 +202,109 @@ importacion.regular$Mes <- NULL
 importacion.regular <- mutate(importacion.regular, Anio = as.Date(Anio, format= "%Y-%m-%d"))
 
 #Creamos una serie de tiempo con las fechas y volumenes de importacion de diesel
-serietiempo.regular <- xts(importacion.regular$GasRegular, order.by = importacion.regular$Anio, frequency = 12)
-serietiempo.regular <- ts(serietiempo.regular, start=c(2001,1), end=c(2019,6), frequency = 12)
+serietiempo.superior <- xts(importacion.regular$GasRegular, order.by = importacion.regular$Anio, frequency = 12)
+serietiempo.superior <- ts(serietiempo.superior, start=c(2001,1), end=c(2019,6), frequency = 12)
 
 #Inicio de la serie
-start(serietiempo.regular)
+start(serietiempo.superior)
 #Final de la serie
-end(serietiempo.regular)
+end(serietiempo.superior)
 #Frecuencia de la serie
-frequency(serietiempo.regular)
+frequency(serietiempo.superior)
 #Grafico de la importacion de 2001 a 2019
-plot(serietiempo.regular, type="l", main="Serie de tiempo de importación de gasolina regular", sub="El volumen  está  dado  en  barriles  de  42  galones", xlab="años", ylab="Volumen importado")
-abline(reg=lm(serietiempo.regular~time(serietiempo.regular)), col=c("red"))
+plot(serietiempo.superior, type="l", main="Serie de tiempo de importación de gasolina regular", sub="El volumen  está  dado  en  barriles  de  42  galones", xlab="años", ylab="Volumen importado")
+abline(reg=lm(serietiempo.superior~time(serietiempo.superior)), col=c("red"))
 #Gráfico sobre el comportamiento de la media en subsets de los años
-plot(aggregate(serietiempo.regular,FUN=mean))
+plot(aggregate(serietiempo.superior,FUN=mean))
 #descomponemos la serie de tiempo en tendencia, estacionaridad e innovación
-decompose_regular<-decompose(serietiempo.regular)
+decompose_regular<-decompose(serietiempo.superior)
 plot(decompose_regular)
 plot(decompose_regular$seasonal)
 
 #Aplicaremos una transformación logarítmica
 plot(decompose_regular$trend)
-logregular <- log(serietiempo.regular)
-plot(logregular, type="l", main="Serie de tiempo de importación regular con transformación logarítmica", sub="El volumen  está  dado  en  barriles  de  42  galones", xlab="años", ylab="Volumen importado")
-abline(reg=lm(decompose_regular$trend~time(logregular)), col=c("red"))
+logsuperior <- log(serietiempo.superior)
+plot(logsuperior, type="l", main="Serie de tiempo de importación regular con transformación logarítmica", sub="El volumen  está  dado  en  barriles  de  42  galones", xlab="años", ylab="Volumen importado")
+abline(reg=lm(decompose_regular$trend~time(logsuperior)), col=c("red"))
 
 #Gráfico de autocorrelación
-acf(logregular, type="correlation", lag.max = 100, main = "Gráfico de correlación serie de tiempo importacion Regular" )
+acf(logsuperior, type="correlation", lag.max = 100, main = "Gráfico de correlación serie de tiempo importacion Regular" )
 
 #Utilización de prueba Dickey-Fuller para raíces unitarias
-adfTest(logregular)
-adfTest(diff(logregular))
+adfTest(logsuperior)
+adfTest(diff(logsuperior))
 
 # funciones de autocorrelación y autocorrelación parcial
-acf(diff(logregular),12) #3 valores que pasan la linea punteada
-pacf(diff(logregular)) #5 valores pasan la linea punteada
+acf(diff(logsuperior),12) #3 valores que pasan la linea punteada
+pacf(diff(logsuperior)) #5 valores pasan la linea punteada
 #Funcion autoarima para encontrar valores propuestos de p, d y q
-auto.arima(serietiempo.regular) #1, 1, 2
+auto.arima(serietiempo.superior) #1, 1, 2
 
 
-fit_regular <- arima(logregular, c(5, 1, 3),seasonal = list(order = c(0, 1, 1), period = 12))
+fit_regular <- arima(logsuperior, c(5, 1, 3),seasonal = list(order = c(0, 1, 1), period = 12))
 #Utilizando valores p, d y q obtenidos en autoarima
-fit_regular.2 <- arima(logregular, c(1, 1, 2),seasonal = list(order = c(0, 1, 1), period = 12))
+fit_regular.2 <- arima(logsuperior, c(1, 1, 2),seasonal = list(order = c(0, 1, 1), period = 12))
 
 #Predicciones
 forecastreg <- forecast(fit_regular, level = c(95), h = 120)
 forecastreg.2 <- forecast(fit_regular.2, level = c(95), h = 120)
+
+#-------------Serie univariante superior-------------
+
+#Hacemos una tabla unicamente con los valores de año, mes y diesel importado
+importacion.superior <- datos[,c(1,2,5)]
+
+#Pegamos en una misma columna el año, el mes y agregamos un 1. Esto para obtener un formato de fecha estándar Y-M-D
+importacion.superior$Anio <- paste(importacion.superior$Anio, importacion.superior$Mes, 1, sep="-")
+importacion.superior$Mes <- NULL
+
+#Cambiamos la clase de la variable año a Date
+importacion.superior <- mutate(importacion.superior, Anio = as.Date(Anio, format= "%Y-%m-%d"))
+
+#Creamos una serie de tiempo con las fechas y volumenes de importacion de diesel
+serietiempo.superior <- xts(importacion.superior$GasSuperior, order.by = importacion.superior$Anio, frequency = 12)
+serietiempo.superior <- ts(serietiempo.superior, start=c(2001,1), end=c(2019,6), frequency = 12)
+
+#Inicio de la serie
+start(serietiempo.superior)
+#Final de la serie
+end(serietiempo.superior)
+#Frecuencia de la serie
+frequency(serietiempo.superior)
+#Grafico de la importacion de 2001 a 2019
+plot(serietiempo.superior, type="l", main="Serie de tiempo de importación de gasolina superior", sub="El volumen  está  dado  en  barriles  de  42  galones", xlab="años", ylab="Volumen importado")
+abline(reg=lm(serietiempo.superior~time(serietiempo.superior)), col=c("red"))
+#Gráfico sobre el comportamiento de la media en subsets de los años
+plot(aggregate(serietiempo.superior,FUN=mean))
+#descomponemos la serie de tiempo en tendencia, estacionaridad e innovación
+decompose_superior<-decompose(serietiempo.superior)
+plot(decompose_superior)
+plot(decompose_superior$seasonal)
+
+#Aplicaremos una transformación logarítmica
+logsuperior <- log(serietiempo.superior)
+plot(logsuperior, type="l", main="Serie de tiempo de importación superior con transformación logarítmica", sub="El volumen  está  dado  en  barriles  de  42  galones", xlab="años", ylab="Volumen importado")
+abline(reg=lm(logsuperior~time(logsuperior)), col=c("red"))
+
+#Gráfico de autocorrelación
+acf(logsuperior, type="correlation", lag.max = 100, main = "Gráfico de correlación serie de tiempo importacion Superior" )
+
+#Utilización de prueba Dickey-Fuller para raíces unitarias
+adfTest(logsuperior)
+adfTest(diff(logsuperior))
+
+# funciones de autocorrelación y autocorrelación parcial
+acf(diff(logsuperior),12) #2 valores que pasan la linea punteada
+pacf(diff(logsuperior)) #5 valores pasan la linea punteada
+#Funcion autoarima para encontrar valores propuestos de p, d y q
+auto.arima(serietiempo.superior) #1, 1, 2
+
+
+fit_superior <- arima(logsuperior, c(5, 1, 2),seasonal = list(order = c(0, 1, 1), period = 12))
+#Utilizando valores p, d y q obtenidos en autoarima
+fit_superior.2 <- arima(logsuperior, c(1, 1, 2),seasonal = list(order = c(0, 1, 1), period = 12))
+
+#Predicciones
+forecastsup <- forecast(fit_superior, level = c(95), h = 120)
+forecastsup.2 <- forecast(fit_superior.2, level = c(95), h = 120)
+
