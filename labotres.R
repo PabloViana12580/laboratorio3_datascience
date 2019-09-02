@@ -16,6 +16,7 @@ library(fUnitRoots)
 library(ggfortify)
 library(xts)
 library(dplyr)
+library(MASS)
 
 # ANALISIS EXPLORATORIO 
 datos<-read.csv("datosImp.csv")
@@ -187,3 +188,48 @@ pred.1 <- predict(fit.2, n.ahead = 10*12)
 pred.2 <- predict(fit.3, n.ahead = 10*12)
 
 ts.plot(serietiempo.diesel,2.718^pred$pred, log = "y", lty = c(1,3))
+
+#Serie univariante regular
+
+#Hacemos una tabla unicamente con los valores de año, mes y diesel importado
+importacion.regular <- datos[,c(1,2,6)]
+
+#Pegamos en una misma columna el año, el mes y agregamos un 1. Esto para obtener un formato de fecha estándar Y-M-D
+importacion.regular$Anio <- paste(importacion.regular$Anio, importacion.regular$Mes, 1, sep="-")
+importacion.regular$Mes <- NULL
+
+#Cambiamos la clase de la variable año a Date
+importacion.regular <- mutate(importacion.regular, Anio = as.Date(Anio, format= "%Y-%m-%d"))
+
+#Creamos una serie de tiempo con las fechas y volumenes de importacion de diesel
+serietiempo.regular <- xts(importacion.regular$GasRegular, order.by = importacion.regular$Anio, frequency = 12)
+serietiempo.regular <- ts(serietiempo.regular, start=c(2001,1), end=c(2019,6), frequency = 12)
+
+#Inicio de la serie
+start(serietiempo.regular)
+#Final de la serie
+end(serietiempo.regular)
+#Frecuencia de la serie
+frequency(serietiempo.regular)
+#Grafico de la importacion de 2001 a 2019
+plot(serietiempo.regular, type="l", main="Serie de tiempo de importación de gasolina regular", sub="El volumen  está  dado  en  barriles  de  42  galones", xlab="años", ylab="Volumen importado")
+abline(reg=lm(serietiempo.regular~time(serietiempo.regular)), col=c("red"))
+#Gráfico sobre el comportamiento de la media en subsets de los años
+plot(aggregate(serietiempo.regular,FUN=mean))
+#descomponemos la serie de tiempo en tendencia, estacionaridad e innovación
+decompose_regular<-decompose(serietiempo.regular)
+plot(decompose_regular)
+plot(decompose_regular$seasonal)
+
+#Aplicaremos una transformación logarítmica
+plot(decompose_regular$trend)
+logregular <- log(serietiempo.regular)
+plot(logregular, type="l", main="Serie de tiempo de importación regular con transformación logarítmica", sub="El volumen  está  dado  en  barriles  de  42  galones", xlab="años", ylab="Volumen importado")
+abline(reg=lm(logregular~time(logregular)), col=c("red"))
+
+#Gráfico de autocorrelación
+acf(logdiesel, type="correlation", lag.max = 100, main = "Gráfico de correlación serie de tiempo importacion Diesel" )
+
+#Utilización de prueba Dickey-Fuller para raíces unitarias
+adfTest(logdiesel)
+adfTest(diff(logdiesel))
